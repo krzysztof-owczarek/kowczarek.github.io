@@ -8,9 +8,9 @@ Recently, I have tried to find a solution of not being able to use aliases remot
 
 ### The solution and the big disadvantage - Warp Terminal
 
-Some of you probably know **Warp Terminal**, as it is on the market for a noticable period of time now.
+Some of you probably know **Warp Terminal** already, as it is available on the market for a noticable period of time now.
 
-The company behind it is advertising their product as a next-gen terminal and they kind of deliver their promisses, compared to the well known, classic terminals like iTerm, at least at their vanilla flavoured form.
+It is advertised as a next-gen terminal and they kind of deliver their promisses, compared to the well known, classic terminals like iTerm, at least at their vanilla flavoured form.
 
 ... those of you, who already know Warp, probably also know what the big disadvantage is,
 
@@ -55,11 +55,11 @@ You can open a quick search box for workflows by a keyboard shortcut (`shift+con
 
 <img width="994" alt="image" src="https://github.com/krzysztof-owczarek/kowczarek.github.io/assets/38732989/916fbce0-6c81-49cd-8baf-9b3550603f43">
 
-### Important disclaimer regarding Warp Terminal
+Workloads on the screenshot are default workloads available in the Warp Terminal.
 
-I am not connected to the company behind Warp Terminal in any way. They just happaned to be a tool that I have found while searching for the solution for a problem.
+### Important disclaimer
 
-Warp Terminal has been once recommended to me by a highschool friend, that worked for Warp at that moment as an engineer.
+I am not connected to the company behind Warp Terminal in any way - it just happens to be a tool with a potential solution to the problem.
 
-I had placed my trust in a person, not in the company, therefore **I am not recommending you** to use Warp given their log-in [policy](https://docs.warp.dev/getting-started/privacy) - you have to make this decision on your own.
+Given Warp Terminal log in [policy](https://docs.warp.dev/getting-started/privacy) - you have to make the decision about using it yourself.
 
