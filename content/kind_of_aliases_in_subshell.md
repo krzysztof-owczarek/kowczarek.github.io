@@ -1,10 +1,10 @@
 ## Alias-like functionality in subshells / external subshells (ex. Docker, K8s, etc.)
 
-**Aliases** or bash functions are usually used for repetive commands, that are far too long or complicated to type in every time we need them.
+**Aliases** or bash functions are mostly useful for frequently used commands, that are far too long or complicated to type in every time we need to execute them.
 
-They work perfectly well in our **local terminals**, but are not very useful for the **(external) subshells**, which are quite popular in the contenerized environment and various services in the cloud.
+They work perfectly well in our **local terminals**, but are not very useful for the **(external) subshells**, which are quite popular in the contenerized world and in the cloud.
 
-Recently, I have tried to find a solution of not being able to use aliases remotely and save myself the trouble of copy-pasting long commands from the text file over and over again or worse. Type them in every time I need to 😨
+Recently, I have tried to find out how I could utilise aliases remotely and save myself the trouble of copy-pasting long commands from the text file over and over again or worse. Type them in every time I need to 😨
 
 ### The solution with a big disadvantage - Warp Terminal (state for: 12th May 2024)
 
@@ -30,9 +30,9 @@ There are multiple opinions on that matter.
 
 ### Nevertheless. For those of you, who are still curious...
 
-Among all features that Warp Terminal offers, there is one called *workloads* - tutorial how to use them can be found [here](https://docs.warp.dev/features/warp-drive/workflows).
+Among all features that Warp Terminal offers, there is one called [*workloads*](https://docs.warp.dev/features/warp-drive/workflows) - [here](https://docs.warp.dev/features/entry/yaml-workflows#creating-custom-workflows) you can find more about creating them yourself.
 
-Long story short, you can define special sets of commands in `.yaml` files, stored locally in a special directory.
+Long story short, you can define special sets of (parametrized) commands in `.yaml` files, stored locally in a special directory.
 
 Workflows are easily searchable and quickly accessible through the Warp Terminal.
 
