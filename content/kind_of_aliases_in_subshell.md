@@ -49,13 +49,13 @@ and some *warpifying*... 🪄
 
 ### Quick search and workflow execution
 
-Right now you can easily use any of the built-in workloads, as well as the ones you create yourself.
+Right now you can easily use any of the built-in workflows, as well as the ones you create yourself.
 
 You can open a quicksearch for workflows by using a keyboard shortcut (`shift+control+r` on mac) and find any workflow you need.
 
 <img width="994" alt="image" src="https://github.com/krzysztof-owczarek/kowczarek.github.io/assets/38732989/916fbce0-6c81-49cd-8baf-9b3550603f43">
 
-Workloads on the screenshot are default workloads available in the Warp Terminal.
+Workflows on the screenshot are default workflows available in the Warp Terminal.
 
 ### Important disclaimer
 
