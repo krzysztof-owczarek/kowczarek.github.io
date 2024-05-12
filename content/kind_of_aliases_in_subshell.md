@@ -6,7 +6,7 @@ They work perfectly well in our **local terminals**, but are not very useful for
 
 Recently, I have tried to find a solution of not being able to use aliases remotely and save myself the trouble of copy-pasting long commands from the text file over and over again or worse. Type them in every time I need to 😨
 
-### The solution and the big disadvantage - Warp Terminal
+### The solution with a big disadvantage - Warp Terminal (state for: 12th May 2024)
 
 Some of you probably know **Warp Terminal** already, as it is available on the market for a noticable period of time now.
 
@@ -25,25 +25,25 @@ A terminal. Requires. Logging in.
 
 Nobody likes it, but they keep doing it - why?
 
-Counting active users? Maybe stealing secrets? There are multiple opinions on that matter.
+There are multiple opinions on that matter.
 ```
 
-### ... nevertheless. For those of you, who had not stopped reading the article yet...
+### Nevertheless. For those of you, who are still curious...
 
-Among all features that Warp Terminal offers, there is one called [*workloads*](https://docs.warp.dev/features/warp-drive/workflows).
+Among all features that Warp Terminal offers, there is one called *workloads* - tutorial how to use them can be found [here](https://docs.warp.dev/features/warp-drive/workflows).
 
 Long story short, you can define special sets of commands in `.yaml` files, stored locally in a special directory.
 
-Workflows are easily searchable and quickly accessible through the terminal.
+Workflows are easily searchable and quickly accessible through the Warp Terminal.
 
-### ... but if the definitions of those workloads are stored locally, how is it different from having aliases defined in my local `.rc` file?
+### How is it different from having aliases defined in my local `.rc` file?
 
 Warp Terminal allows you to [*warpify*](https://docs.warp.dev/features/subshells#how-to-warpify-the-subshell) any bash subshell that has been opened in their terminal.
 
 
 <img width="825" alt="Screenshot 2024-05-12 at 15 04 39" src="https://github.com/krzysztof-owczarek/kowczarek.github.io/assets/38732989/8b4a8e7e-aaf8-452c-aa1b-493ed42a47aa">
 
-and some *warpifying*...
+and some *warpifying*... 🪄
 
 <img width="1002" alt="Screenshot 2024-05-12 at 15 05 00" src="https://github.com/krzysztof-owczarek/kowczarek.github.io/assets/38732989/664d1cad-834f-4e77-beb3-87b0b3c3dffd">
 
@@ -51,7 +51,7 @@ and some *warpifying*...
 
 Right now you can easily use any of the built-in workloads, as well as the ones you create yourself.
 
-You can open a quick search box for workflows by a keyboard shortcut (`shift+control+r` on mac) and find anything you need very quickly.
+You can open a quicksearch for workflows by using a keyboard shortcut (`shift+control+r` on mac) and find any workflow you need.
 
 <img width="994" alt="image" src="https://github.com/krzysztof-owczarek/kowczarek.github.io/assets/38732989/916fbce0-6c81-49cd-8baf-9b3550603f43">
 
