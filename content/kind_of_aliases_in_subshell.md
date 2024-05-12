@@ -2,7 +2,7 @@
 
 **Aliases** or bash functions are mostly useful for frequently used commands, that are far too long or complicated to type in every time we need to execute them.
 
-They work perfectly well **locaally**, but are not very useful for the **(external) subshells**, which are quite popular in the contenerized world and in the cloud.
+They work perfectly well **locally**, but are not very useful for the **(external) subshells**, which are quite popular in the contenerized world and in the cloud.
 
 Recently, I have tried to find out how I could utilise aliases remotely and save myself the trouble of copy-pasting long commands from the text file over and over again or worse. Type them in every time I need to 😨
 
