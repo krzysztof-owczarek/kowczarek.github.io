@@ -1,0 +1,39 @@
+DRAFT
+
+I have been recently working on introducing a HPA on a k8s deployment of an application that:
+- needs to handle a heavy, constant traffic for a long time,
+- is CPU intensive,
+- is CPU throttling sensitive,
+- needs full power very rarely, so most of the time it should not use many resources and should not be scaled to many replicas.
+
+I have created a Gatling scenario that I have been using to test the app.
+Load shape looks like that: <insert>
+
+Before starting to solve the HPA problem, I have already found an thouroughly load tested a minimal static (no HPA) balance between resources and replias, so the natural first step has been starting with the same resource assigments, but use less replicas on start and try to find a HPA setting that will make the test pass.
+
+... and there is where problems started. It just did not work.
+
+I have took a step back, set up HPA that started with a sufficient replicas to handle the whole load and just add replicas extra. It did not work!
+
+The setup that has been previously and statically sufficient to handle everything started to work horribly. Integration calls via gRPC and HTTP started to take longer and longer, CPU throttling has started to show up, and CPU load peaked. In effect the k8s probes on the apps had started to lag so much, k8s has been restarting them putting even more straing on the remaining pods that were slower and slower until restarted too.
+
+There has been a suspision that a k8s cluster is scaling out nodes or available resources underneath when HPA kicks in, but it was quite hard to pin point what is going on and as for some of you that are more expierienced in the k8s mechanics some metrics and graphs revealing the problem might pop up in minds it has not been easy to find for me, not my SRE contacts I have tried to consult on the matter.
+
+Break through.
+I have already monitored CPU and Memory assignments used/assigned for the pods, but I have not came up with the possible solution until two things happaned.
+
+- I have seen the same cpu/mem graphs assigned/used, but plotted differently (how important it can be!) - they were not just lines, they were lined with filling underneath plotted on the same graph!
+
+- I have started to extensively search more and more information about recource assignments to understand how k8s can use more cpu or mem that it was assign to the pod and were it breaks and found a "do not use a CPU limit on k8s" article.
+
+--- 
+
+what the graphs were saying?
+pods  were using much more cpu than assigned to pods in deployment and they seem to be crushed for that by a killer process
+
+- jvm warm ups
+- how to compensate for that additional usage for a short period of time?
+
+Article points out that when you do not set up limit on CPU assignment you might get any unused CPU cycles if there is any on the node - that has changed everything!
+
+TBC
