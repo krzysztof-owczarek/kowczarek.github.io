@@ -1,21 +1,53 @@
-**Short problem Review no.1**
+# Lessons learned: How turning on Horizontal Pod Autoscaler on the perfectly balanced K8s deployment can degrade the performence by more thatn 50%.
 
-Recently, I have been working on setting up a proper deployment for an application that has been designed to handle a very heavy traffic spikes. Those traffic spikes were essential for our business and it has been absolutely crucial to handle all the incoming requests without any service degradation.
+Recently, I have been working on a proper K8s deployment setup for an application that has been designed to handle a very heavy traffic spikes. Those traffic are happening from time to time and are essential for our business, so it has been absolutely crucial to be able to handle all the incoming traffic without **any** service degradation.
 
-I have decided to write a simple Gatling scenario, that would perform calls to the API with a configurable RPS for a configurable time duration. The shape of the scenario looked more-less like this:
+When you work on spikes of synchronously processed traffic only, you do not get second chances.
 
-<insert>
+## Prepare your toolset
 
-Each call to the API has been starting a chain of integration calls happening mostly synchronously:
-- calls to database,
-- calls to REST endpoints,
-- calls to gRPC services,
-- producing messages on Kafka,
-- etc.
+TODO
 
-As such request/response roundtrips take time you can imagine it has not only generated a noticable (not big though) *memory* footprint (that GC had to clean up quite often also using CPU cycles for that matter), but it has also depended on *CPUs* with a lot of incoming requests and a great amount of *context switching*. Deployment had to be well balanced to have all the resources and replicas in place to let the application do its job, keeping in mind that overprovision (horizontal and vertical) is not welcome.
+## Get to know your cluster well
 
-**Introducing HPA (Horizontal Pod Autoscaler) to the well balanced deployment**
+1. Unless you are a DevOPs, SRE or any other Kubernates specialist that has been around while the cluster has been set up, you probably do not have a clue how it has been configured and in bigger organisations it may be quite hard to find that out. If you have good monitoring you can probably deduce some things about the cluster, how much nodes are up and how many resources they use, but you will probably not know what are the scaling strategies, what is the resource cap on the whole cluster if any etc.
+
+2. When making crucial deployment decisions such as resource allocation, initial replicas count or HPA scaling strategy experiment a bit, test it out on the scenario valid for your case and do not settle for the first good result.
+
+3. Some clusters behave better if you scale out to many small replicas, some will favour a few bigger ones. I am not expert on K8s configuration, but if your HPA will trigger a cluster scaling and you go for no traffic degradation you will get weak results. 
+
+## OOMKiller does not always work perfectly, CPU overcommittment happens and it is not always easy to notice
+
+It might be a configuration thing, but I have seen a lot of pods that were trying to use well over their memory assignment value and lived long enough to disrupt 
+
+
+
+
+
+
+## General overview of the request processing
+
+Response for each call has been a composition of successfully ended integration calls that happen synchronously one after another. Integration calls involve various technologies that utilize different phisical resources, stacks, layers and pools you have to take into consideration, while assigning resources to the application pods.
+
+```
+Examples:
+- database (connections in the pool, transaction management)
+- REST endpoints (server threads, request/socket timeouts),
+- gRPC services (gRPC service thread pools, clients and server timeouts and deadlines),
+- ...
+```
+
+[memory]
+Aformentioned call are performed to the external services and each has a noticable *response latency*. During the time needed for a completion of all subsequent, synchronous requests most of intermidiate objects have to live in memory generating a noticable **memory footprint**, which will have to be cleaned up by **Garbage Collector** some time.
+
+**Note: choosing a right GC that will provide a performant cleaning strategy for your scenario, while keeping latency and CPU usage low is very important, but outside the scope of this article ** 
+
+[cpu]
+All the integrations need some part of your assigned CPU time. Garbage collector will use it too. Unless you plan to assign a lot of CPU time to your deployment and than divide this value into small, but predictable *fixed size thread pools* you don't have to worry much about **throttling** and **context switching**. 
+
+If you want to achieve a good throughput though, you have to make your code ready for heavy context switching and get rid of everything that would block or pin threads like state mutation, synchronized blocks etc. Enabling Virtual Threads will boost your performence, but **throttling** becomes your concern. Enabling Virtual Threads may add additional memory footprint too.
+
+# Introducing HPA (Horizontal Pod Autoscaler) to the well balanced deployment
 
 The deployment has been balanced. I have found the right resource assignment per pod and a minimal number of replicas, that were sufficient enought to meet all of my test requirements.
 
