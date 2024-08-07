@@ -1,12 +1,22 @@
-# Lessons learned: How turning on Horizontal Pod Autoscaler on the perfectly balanced K8s deployment can degrade the performence by more thatn 50%.
+# Lessons learned: finding the right deployment configuration for your traffic intensive app and how turning on HPA can degrade the initial performence by more that 50%.
 
-Recently, I have been working on a proper K8s deployment setup for an application that has been designed to handle a very heavy traffic spikes. Those traffic are happening from time to time and are essential for our business, so it has been absolutely crucial to be able to handle all the incoming traffic without **any** service degradation.
+Recently, I have been working on a proper K8s deployment setup for an application that has been designed to handle big traffic spikes. Those spikes are happening rarely, but when they do we have to be ready to handle them. Designing and building an app and the architecture that will work mostly with traffic spikes is tricky, as you usually do not get second chances when your service degrades.
 
-When you work on spikes of synchronously processed traffic only, you do not get second chances.
+## Finding the configuration that will not overprovision resources (horizontally and vertically), but handle the load needs a good measurement tool
 
-## Prepare your toolset
+Build or use a simple tool for putting a strain on crucial parts of your system. It can be a Gatling scenario that is easy to run against your test cluster as many times as you need, whenever you need.
 
-TODO
+**hint:** if your K8s cluster is hosted on the cloud like AWS, it is usually a good idea to run the load test from within the cluster as well as cloud providers tend to charge for incoming external traffic.
+
+**hint2:** it might be a good idea to isolate your app from the external downstreams/upstreams with mocks and first make sure that your codebase performance is high enough. It will be much easier to eliminate performance bottlenecks on your side without having to worry about the other.
+
+**hint3:** if you mock external services, introduce artificial latencies. Do not settle for a fixed one, it is very easy to add a variance (like random latency between range of X and Y per call) and such a scenario will be much closer to the real thing. Try to determine what is an average response time of the service you mock and use that value while setting the artificial latency.
+
+**hint4:** when your codebase passed the load test scenario requirements remove integration mocks one by one. Run load test scenario(s) after introducing every other real integration point and check if it is still passing.
+
+**hint5:** experiment with different configurations. For instance, if your application has been written in Java, try to run it on bigger number of small JVMs or smaller number of big JVMs. Do not hesitate to try out various Garbage Collectors to find the one that suits your needs. Not every aspect of optimisation is easy to forsee, some things have to be found experimentally.
+
+**hint6:** if you find the perfect minimal configuration that make your load scenario(s) pass, consider adding 1 or 2 replicas more just for backup as K8s does not guarantee that it won't kill your pods from time to time while freeing up some resources or after adding new nodes to the cluster.
 
 ## Get to know your cluster well
 
