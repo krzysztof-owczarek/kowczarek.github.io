@@ -20,7 +20,7 @@ Build or use a simple tool for putting a strain on crucial parts of your system.
 
 ## Get to know your cluster well
 
-1. Unless you are a DevOPs, SRE or any other Kubernates specialist that has been around while the cluster has been set up, you probably do not have a clue how it has been configured and in bigger organisations it may be quite hard to find that out. If you have good monitoring you can probably deduce some things about the cluster, how much nodes are up and how many resources they use, but you will probably not know what are the scaling strategies, what is the resource cap on the whole cluster if any etc.
+1. Unless you are a DevOPs, SRE or any other Kubernates specialist that has been around while the cluster has been set up, you probably do not have a clue how it has been configured and in bigger organisations it may be quite hard to find that out. If you have a good monitoring you can probably learn some things about the cluster, how much nodes are up and how many resources they use, but you will probably not know what are the scaling strategies, what is the resource cap on the whole cluster if any etc.
 
 2. When making crucial deployment decisions such as resource allocation, initial replicas count or HPA scaling strategy experiment a bit, test it out on the scenario valid for your case and do not settle for the first good result.
 
