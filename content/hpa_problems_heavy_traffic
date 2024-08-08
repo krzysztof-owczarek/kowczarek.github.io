@@ -1,129 +1,48 @@
 # Lessons learned: finding the right deployment configuration for your traffic intensive app and how turning on HPA can degrade the initial performence by more that 50%.
 
-Recently, I have been working on a proper K8s deployment setup for an application that has been designed to handle big traffic spikes. Those spikes are happening rarely, but when they do we have to be ready to handle them. Designing and building an app and the architecture that will work mostly with traffic spikes is tricky, as you usually do not get second chances when your service degrades.
+Recently, I have been working on a proper K8s deployment setup for an application that has been designed to handle big traffic spikes. Those spikes are rare, but when appear, the deployment has to be ready to handle them. Designing and building an app and the architecture that will work with sychronous traffic spikes is tricky as you usually don't get any second chances.
 
-## Finding the configuration that will not overprovision resources (horizontally and vertically), but handle the load needs a good measurement tool
+## Finding the configuration that will not overprovision resources and replicas is not easy, so you need a good tool.
 
-Build or use a simple tool for putting a strain on crucial parts of your system. It can be a Gatling scenario that is easy to run against your test cluster as many times as you need, whenever you need.
+Use one of the load test tools for putting a strain on crucial parts of your system or build a custom one. It can be a short Gatling scenario that would be easy to run against your test cluster as many times as you need, whenever you need.
 
-**hint:** if your K8s cluster is hosted on the cloud like AWS, it is usually a good idea to run the load test from within the cluster as well as cloud providers tend to charge for incoming external traffic.
+**hint:** if your K8s cluster is hosted on the cloud like AWS, it is usually a good idea to run the load test from **within the cluster** as cloud providers tend to charge for incoming **external** traffic.
 
-**hint2:** it might be a good idea to isolate your app from the external downstreams/upstreams with mocks and first make sure that your codebase performance is high enough. It will be much easier to eliminate performance bottlenecks on your side without having to worry about the other.
+**hint2:** it might be a good idea to isolate your app from the external downstreams/upstreams with mocks and first make sure that your codebase performance is high enough. It will be much easier to eliminate performance bottlenecks in your code first.
 
-**hint3:** if you mock external services, introduce artificial latencies. Do not settle for a fixed one, it is very easy to add a variance (like random latency between range of X and Y per call) and such a scenario will be much closer to the real thing. Try to determine what is an average response time of the service you mock and use that value while setting the artificial latency.
+**hint3:** when you mock external services, introduce artificial latencies. Do not settle for a fixed one, it is very easy to add a small variance (random latency between range of X and Y) and such a scenario will be much closer to the real thing. Try to determine what is an average response time of the service you mock and use that value as a mean value for your random artificial latency.
 
-**hint4:** when your codebase passed the load test scenario requirements remove integration mocks one by one. Run load test scenario(s) after introducing every other real integration point and check if it is still passing.
+**hint4:** when your codebase pass your load test scenario remove integration mocks one by one. Run load tests after introducing every real integration to check if it is still passing.
 
-**hint5:** experiment with different configurations. For instance, if your application has been written in Java, try to run it on bigger number of small JVMs or smaller number of big JVMs. Do not hesitate to try out various Garbage Collectors to find the one that suits your needs. Not every aspect of optimisation is easy to forsee, some things have to be found experimentally.
+**hint5:** experiment with different configurations. For instance, if your application has been written in Java, try to run it on a bigger number of small JVMs or a small number of big JVMs. Do not hesitate to try out various Garbage Collectors to find the one that suits your needs. Not every aspect of optimisation is easy to forsee, some things have to be found experimentally.
 
 **hint6:** if you find the perfect minimal configuration that make your load scenario(s) pass, consider adding 1 or 2 replicas more just for backup as K8s does not guarantee that it won't kill your pods from time to time while freeing up some resources or after adding new nodes to the cluster.
 
 ## Get to know your cluster well
 
-1. Unless you are a DevOPs, SRE or any other Kubernates specialist that has been around while the cluster has been set up, you probably do not have a clue how it has been configured and in bigger organisations it may be quite hard to find that out. If you have a good monitoring you can probably learn some things about the cluster, how much nodes are up and how many resources they use, but you will probably not know what are the scaling strategies, what is the resource cap on the whole cluster if any etc.
+1. Unless you are a DevOPs, SRE or any other Kubernates specialist that has been around while the cluster has been set up, you probably do not have a clue how it has been configured. In bigger organisations it may be quite hard to find that out too.
 
-2. When making crucial deployment decisions such as resource allocation, initial replicas count or HPA scaling strategy experiment a bit, test it out on the scenario valid for your case and do not settle for the first good result.
+If you have a good monitoring you can probably learn a few things about the cluster, for example, how much nodes are currently up or how many resources it uses, but you will probably not know what are the scaling strategies, what is the resource cap on the whole cluster etc.
 
-3. Some clusters behave better if you scale out to many small replicas, some will favour a few bigger ones. I am not expert on K8s configuration, but if your HPA will trigger a cluster scaling and you go for no traffic degradation you will get weak results. 
+2. When making crucial deployment decisions such as:
+- resource allocation per pod,
+- initial replicas count,
+- or HPA scaling strategy
 
-## OOMKiller does not always work perfectly, CPU overcommittment happens and it is not always easy to notice
+experiment a bit. Test it out on the scenario that is valid for your case and do not settle for the first good result.
 
-It might be a configuration thing, but I have seen a lot of pods that were trying to use well over their memory assignment value and lived long enough to disrupt 
+3. Some clusters behave better if you use many small replicas, some will favour a few bigger ones. I am not expert on K8s configuration, but my tests show that if your HPA triggers a cluster rescaling while you load test the application you will get bed results.
 
+## OOMKiller does not always work perfectly
 
+It might be a configuration thing, but I have seen a lot of pods that were trying to use well over their memory assignment value and lived long enough to disrupt the whole deployment's performence.
 
+## CPU throttling is a silent killer
 
+When your application starts to overuse assign CPU time you will face throttling. Throttling is much harder to pinpoint than memory problems, because the application may live long enough to produce errors that will cover the real issue.
 
-
-## General overview of the request processing
-
-Response for each call has been a composition of successfully ended integration calls that happen synchronously one after another. Integration calls involve various technologies that utilize different phisical resources, stacks, layers and pools you have to take into consideration, while assigning resources to the application pods.
-
-```
-Examples:
-- database (connections in the pool, transaction management)
-- REST endpoints (server threads, request/socket timeouts),
-- gRPC services (gRPC service thread pools, clients and server timeouts and deadlines),
-- ...
-```
-
-[memory]
-Aformentioned call are performed to the external services and each has a noticable *response latency*. During the time needed for a completion of all subsequent, synchronous requests most of intermidiate objects have to live in memory generating a noticable **memory footprint**, which will have to be cleaned up by **Garbage Collector** some time.
-
-**Note: choosing a right GC that will provide a performant cleaning strategy for your scenario, while keeping latency and CPU usage low is very important, but outside the scope of this article ** 
-
-[cpu]
-All the integrations need some part of your assigned CPU time. Garbage collector will use it too. Unless you plan to assign a lot of CPU time to your deployment and than divide this value into small, but predictable *fixed size thread pools* you don't have to worry much about **throttling** and **context switching**. 
-
-If you want to achieve a good throughput though, you have to make your code ready for heavy context switching and get rid of everything that would block or pin threads like state mutation, synchronized blocks etc. Enabling Virtual Threads will boost your performence, but **throttling** becomes your concern. Enabling Virtual Threads may add additional memory footprint too.
-
-# Introducing HPA (Horizontal Pod Autoscaler) to the well balanced deployment
-
-The deployment has been balanced. I have found the right resource assignment per pod and a minimal number of replicas, that were sufficient enought to meet all of my test requirements.
-
-It worked great, but as I have said before the overprovisioning was not warmly welcome. It is easy and expensive to just overprovision without thinking. It is usually overused in the industry to hide problems with the applications by covering it with some money too.
-
-Of course there are usecases where the cost of a reasonable overprovisioning is well justified, but our production scenario was mainly about the peaks of traffic during some busy hours when most of the business happened. For the rest of the time (days or even weeks) the deployment would be mostly idle, so there was a huge place for an improvement to introduce a proper HPA and save a lot of money on resources and replicas.
-
-**Starting strong and failing immidiately**
-
-The first thing I have tried was just to enable HPA, setup a low CPU usage treshold for scaling up some additional instances and run the test again. I have not expected any trouble as the initial setup has been perfectly capable of sustaining the load generated by the Gatling scenario. I was very suprised when I have found out that the moment HPA starts to scale up instances everything slows down to the point where k8s healthcheck probes on pods time out and the whole deployment locks in the rollout restarts resulting in around 30-50% of initial performence.
-
-**Long story short**
-
-It appeared that each time the HPA started to scale out the new pods the CPU requested value for the deployment went over the CPU assigned metric.
-
-
-
-
-
-Turning on HPA (Horizotal Pod Autoscaler) on well balanced (resource and replica-wise), non-HPA Kubernetes deployment of a heavy traffic app ruins everything.
-
-**Long Problem Description**
-
-Having a Gatling scenario that performs a a constant, heavy traffic load test on the CPU intensive application (see scenario shape on diagram no. 1) I have managed to balance minimal resources and replicas that are able to handle the load test without any problems. The appliction in test should be able to handle such a heavy traffic at any time for any duration necessary.
-
-The app and the deployments needs to handle such spikes, but on production, such heavy traffic happends only a few times a month. For the rest of time the application stays close to IDLE, so the natural next step to take was to start with only a few replicas and scale horizontaly when needed.
-
-
-
-
-DRAFT
-
-I have been recently working on introducing a HPA on a k8s deployment of an application that:
-- needs to handle a heavy, constant traffic for a long time,
-- is CPU intensive,
-- is CPU throttling sensitive,
-- needs full power very rarely, so most of the time it should not use many resources and should not be scaled to many replicas.
-
-I have created a Gatling scenario that I have been using to test the app.
-Load shape looks like that: <insert>
-
-Before starting to solve the HPA problem, I have already found an thouroughly load tested a minimal static (no HPA) balance between resources and replias, so the natural first step has been starting with the same resource assigments, but use less replicas on start and try to find a HPA setting that will make the test pass.
-
-... and there is where problems started. It just did not work.
-
-I have took a step back, set up HPA that started with a sufficient replicas to handle the whole load and just add replicas extra. It did not work!
-
-The setup that has been previously and statically sufficient to handle everything started to work horribly. Integration calls via gRPC and HTTP started to take longer and longer, CPU throttling has started to show up, and CPU load peaked. In effect the k8s probes on the apps had started to lag so much, k8s has been restarting them putting even more straing on the remaining pods that were slower and slower until restarted too.
-
-There has been a suspision that a k8s cluster is scaling out nodes or available resources underneath when HPA kicks in, but it was quite hard to pin point what is going on and as for some of you that are more expierienced in the k8s mechanics some metrics and graphs revealing the problem might pop up in minds it has not been easy to find for me, not my SRE contacts I have tried to consult on the matter.
-
-Break through.
-I have already monitored CPU and Memory assignments used/assigned for the pods, but I have not came up with the possible solution until two things happaned.
-
-- I have seen the same cpu/mem graphs assigned/used, but plotted differently (how important it can be!) - they were not just lines, they were lined with filling underneath plotted on the same graph!
-
-- I have started to extensively search more and more information about recource assignments to understand how k8s can use more cpu or mem that it was assign to the pod and were it breaks and found a "do not use a CPU limit on k8s" article.
-
---- 
-
-what the graphs were saying?
-pods  were using much more cpu than assigned to pods in deployment and they seem to be crushed for that by a killer process
-
-- jvm warm ups
-- how to compensate for that additional usage for a short period of time?
-
-Article points out that when you do not set up limit on CPU assignment you might get any unused CPU cycles if there is any on the node - that has changed everything!
-
-TBC
+Some important observations while load testing a CPU intensive JVM application:
+- your CPU usage will be much higher on the fresh pods due to the JVM warmup, you have take this into consideration or you will quickly face pod kills and restarts from the cluster,
+- throttling does not make the service blow up at once. The service will usually work for some time, degrading gradually while stedy flow of requests will make CPU switch context frequently having very little time to spend for each operation. In effect the response times will grow higher to the point your service starts to hit timeout somewhere,
+- after some time your k8s probes start to timeout too, so the cluster will begin to restart your pods. Traffic that was flowing through killed pods a second ago will hit remaining pods making them throttle even quicker,
+- if you are using any reverse proxy sidecars like Istio its CPU and memory usage can go off charts too. Another thing that can distract you from the real problem.
