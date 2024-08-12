@@ -7,3 +7,6 @@
 
 ## Terminal Tricks
 ### 3. [Alias-like functionality in subshells / external subshells (ex. Docker, K8s, etc.)](./content/kind_of_aliases_in_subshell.md)
+
+## Load tests
+### 4. [Lessons learned: load testing a CPU intensive application. Performance, integrations, k8s deployments and hpa](./content/hpa_problems_heavy_traffic.md)
