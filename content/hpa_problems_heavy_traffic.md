@@ -6,7 +6,7 @@ Perform load tests on the spike-oriented, CPU-intensive JVM application and find
 
 Recently, I have been working on performing load tests on the orchestrator application. The task was important because the application had to perform well under the heavy traffic expected to appear in the form of significant spikes. The test was supposed to uncover potential problems, help us with the final optimization and configurations, and most importantly prove that we could meet all out goals. 
 
-For the need of this article, I will refer to the application as `the orchestrator`, because its main task was to orchestrate synchronous calls to other systems and combine the result into a successful response.
+For the need of this article, I can refer to the application as `the orchestrator`, because its main task was to orchestrate synchronous calls to other systems and combine the result into a successful response.
 
 Load tests were an important step in finding the flaws in the code, as well as in efficiently balancing resource assignments (memory and CPU), finding a proper JVM configuration (Garbage Collector, Xms/Xmx) and replica count (starting without HPA) to achieve the maximum performance needed with as few resources possible.
 
