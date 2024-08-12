@@ -1,6 +1,6 @@
 # Performing load tests on the spike-oriented, CPU-intensive JVM application and find the right setup for Kubernetes deployment.
 
-Some time ago, I have been working on designing and performing load tests of a new backend application developed to provide a totally new service for our clients.
+Some time ago, I have been working on designing and performing load tests of a backend service providing a new service for our clients.
 
 The task was important because the application had to perform well under heavy traffic and the traffic was expected to arrive mostly in the form of sudden and heavy spikes. The test was supposed to uncover potential problems in code, help with the final optimizations, and most importantly prove that it could meet all performance goals. 
 
