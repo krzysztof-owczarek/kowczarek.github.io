@@ -4,6 +4,10 @@ Some time ago, I have been working on designing and performing load tests of a n
 
 The task was important because the application had to perform well under heavy traffic and the traffic was expected to arrive mostly in the form of sudden and heavy spikes. The test was supposed to uncover potential problems in code, help with the final optimizations, and most importantly prove that it could meet all performance goals. 
 
+It was a quite successful endevour. It has helped us discover performance bottlenecks, cut costs on Kubernetes deployments and most importantly of all - it played a major role in building trust in our code.
+
+Thorough, repetitive testing let you embrace change easily without fear of breaking something, providing a fast feedback whenever you need it.
+
 > Load tests are an important step in finding the flaws in the code, as well as in efficiently balancing resource assignments (memory and CPU), finding a proper JVM configuration (Garbage Collector, Xms/Xmx) and replica count (starting without HPA) to achieve the maximum performance needed with as few resources possible.
 
 Here are some thoughts, observations, and lessons learned that may help you find your own path into proper load testing.
