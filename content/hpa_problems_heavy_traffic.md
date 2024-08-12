@@ -6,7 +6,7 @@ The task was important because the application had to perform well under heavy t
 
 It was a quite successful endevour. It has helped us discover performance bottlenecks, cut costs on Kubernetes deployments and most importantly of all - it played a major role in building trust in our code.
 
-Thorough, repetitive testing let you embrace change easily without fear of breaking something, providing a fast feedback whenever you need it.
+Thorough, repetitive testing let you embrace change easily without fear, providing a fast feedback whenever you need it.
 
 > Load tests are an important step in finding the flaws in the code, as well as in efficiently balancing resource assignments (memory and CPU), finding a proper JVM configuration (Garbage Collector, Xms/Xmx) and replica count (starting without HPA) to achieve the maximum performance needed with as few resources possible.
 
