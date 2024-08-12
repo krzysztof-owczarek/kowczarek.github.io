@@ -1,30 +1,28 @@
-# Task:
+# Performing load tests on the spike-oriented, CPU-intensive JVM application and find the right setup for Kubernetes deployment.
 
-Perform load tests on the spike-oriented, CPU-intensive JVM application and find the right setup for Kubernetes deployment.
+Some time ago, I have been working on performing thorough load tests on the backend application. The task was important because the application had to perform well under heavy traffic and the traffic was expected to arrive mostly in the form of sudden and heavy spikes. The test was supposed to uncover potential problems, help with the final optimization and configurations, and most importantly prove that we could meet all out goals. 
 
-# Introduction to the problem:
+Load tests are an important step in finding the flaws in the code, as well as in efficiently balancing resource assignments (memory and CPU), finding a proper JVM configuration (Garbage Collector, Xms/Xmx) and replica count (starting without HPA) to achieve the maximum performance needed with as few resources possible.
 
-Recently, I have been working on performing load tests on the orchestrator application. The task was important because the application had to perform well under the heavy traffic expected to appear in the form of significant spikes. The test was supposed to uncover potential problems, help us with the final optimization and configurations, and most importantly prove that we could meet all out goals. 
-
-For the need of this article, I can refer to the application as `the orchestrator`, because its main task was to orchestrate synchronous calls to other systems and combine the result into a successful response.
-
-Load tests were an important step in finding the flaws in the code, as well as in efficiently balancing resource assignments (memory and CPU), finding a proper JVM configuration (Garbage Collector, Xms/Xmx) and replica count (starting without HPA) to achieve the maximum performance needed with as few resources possible.
+Here are some thoughts, observations, and lessons learned that may help you find your own path into proper load testing.
 
 # Challenges of synchronous calls and context switching:
 
-The majority of the calls the application orchestrates are synchronous. It effectively means that each call is being fed with data from the previous calls and has major consequences:
+Application in test was an orchestrator.
 
-- the application response time is a sum of all intermediate response times plus a latency added by an orchestrator itself, 
+The majority of the calls the application orchestrated were synchronous. It effectively means that each call was being fed with data from the previous calls and it had major consequences:
 
-- every call to the external services takes some time, which cannot be spent waiting - CPU have to switch their focus toward other threads that are ready for action, 
+- the application response time was a sum of all intermediate response times plus a latency added by an orchestrator itself, 
 
-- every operation that blocks CPU from switching to other tasks, like synchronization blocks, and thread pinning (Virtual Threads) will affect the whole system, 
+- every call to the external services took some time, which could not be spent waiting - CPU had to switch their focus toward other threads that are ready for action, 
 
-- tasks that won’t end quickly will block intermediate objects from being removed from memory by the GC efficiently, leaving a considerable memory footprint and possibly forcing GC to stop the world for a major cleanup or at least, use some more of the CPU time to run cleanups more frequently, 
+- every operation that blocked CPU from switching to other tasks, like synchronization blocks, and thread pinning (Virtual Threads) would affect the whole system, 
+
+- tasks that would not end quickly would block intermediate objects from being removed from memory by the GC efficiently, leaving a considerable memory footprint and possibly forcing GC to stop the world for a major cleanup or at least, use some more of the CPU time to run cleanups more frequently, 
 
 - thread blocking, pinning and the tasks that take too long, accompanied by a steady flow of new requests will result in CPU throttling, 
 
-> As you can see, load testing can not only ensure you, that your application can handle the required load, but it can also help you with finding bottlenecks in the code and configuration. It can assist you with optimising JVM and finding proper resource assignments and replica count for your Kubernetes deployment.  It may also test the performance of your downstream and upstream services.
+> Load testing will not only ensure you, that your application can handle the required load, but it can also help you with finding bottlenecks in both code and configuration. It can assist you with optimising JVM, finding proper resource assignments and replica count for your Kubernetes deployment.   It may also test the performance of your downstream and upstream services.
 
 # Elimination of external services from the initial phase of testing:
 
