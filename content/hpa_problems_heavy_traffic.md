@@ -4,7 +4,7 @@ Some time ago, I have been working on designing and performing load tests of a b
 
 The task was important because the application had to perform well under heavy traffic, which was expected to arrive mostly in the form of sudden, heavy spikes. The test was supposed to uncover potential problems in code, help with the final optimizations, and most importantly prove that it could meet all performance goals. 
 
-It was a quite successful endevour. It has helped us discover performance bottlenecks, cut costs on Kubernetes deployments and most importantly of all - it played a major role in building trust in our code.
+It was a very successful endevour. It has helped us discover performance bottlenecks, cut costs on Kubernetes deployments and most importantly of all - it played a major role in building trust in our code.
 
 Thorough, repetitive testing let you embrace change easily without fear, providing a fast feedback whenever you need it.
 
