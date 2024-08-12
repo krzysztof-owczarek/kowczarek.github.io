@@ -1,48 +1,93 @@
-# Lessons learned: finding the right deployment configuration for your traffic intensive app and how turning on HPA can degrade the initial performence by more that 50%.
+# Task:
 
-Recently, I have been working on a proper K8s deployment setup for an application that has been designed to handle big traffic spikes. Those spikes are rare, but when appear, the deployment has to be ready to handle them. Designing and building an app and the architecture that will work with sychronous traffic spikes is tricky as you usually don't get any second chances.
+Perform load tests on the spike-oriented, CPU-intensive JVM application and find the right setup for Kubernetes deployment.
 
-## Finding the configuration that will not overprovision resources and replicas is not easy, so you need a good tool.
+# Introduction to the problem:
 
-Use one of the load test tools for putting a strain on crucial parts of your system or build a custom one. It can be a short Gatling scenario that would be easy to run against your test cluster as many times as you need, whenever you need.
+Recently, I have been working on performing load tests on the orchestrator application we have created to introduce a new service to our portfolio. The task was very important because the application had to perform well under significant traffic expected to appear in the shape of significant spikes.
 
-**hint:** if your K8s cluster is hosted on the cloud like AWS, it is usually a good idea to run the load test from **within the cluster** as cloud providers tend to charge for incoming **external** traffic.
+For the needs of this article, I will refer to the application as `the orchestrator`, because its main task was to orchestrate synchronous calls to other systems and combine the result into a successful response.
 
-**hint2:** it might be a good idea to isolate your app from the external downstreams/upstreams with mocks and first make sure that your codebase performance is high enough. It will be much easier to eliminate performance bottlenecks in your code first.
+Load tests were an important step in finding the flaws in the code, as well as in efficiently balancing resource assignments (memory and CPU), finding a proper JVM configuration (Garbage Collector, Xms/Xmx) and replica count (starting without HPA) to achieve the maximum performance needed with as few resources possible.
 
-**hint3:** when you mock external services, introduce artificial latencies. Do not settle for a fixed one, it is very easy to add a small variance (random latency between range of X and Y) and such a scenario will be much closer to the real thing. Try to determine what is an average response time of the service you mock and use that value as a mean value for your random artificial latency.
+# Challenges of synchronous calls and context switching:
 
-**hint4:** when your codebase pass your load test scenario remove integration mocks one by one. Run load tests after introducing every real integration to check if it is still passing.
+The majority of the calls the application orchestrates are synchronous. It effectively means that each call is being fed with data from the previous calls and has major consequences:
 
-**hint5:** experiment with different configurations. For instance, if your application has been written in Java, try to run it on a bigger number of small JVMs or a small number of big JVMs. Do not hesitate to try out various Garbage Collectors to find the one that suits your needs. Not every aspect of optimisation is easy to forsee, some things have to be found experimentally.
+- the application response time is a sum of all intermediate response times plus a latency added by an orchestrator itself, 
+- every call to the external services takes some time, which cannot be spent waiting - CPU have to switch their focus toward other threads that are ready for action, 
+- every operation that blocks CPU from switching to other tasks, like synchronization blocks, and thread pinning (Virtual Threads) will affect the whole system, 
+- tasks that won’t end quickly will block intermediate objects from being removed from memory by the GC efficiently, leaving a considerable memory footprint and possibly forcing GC to stop the world for a major cleanup or at least, use some more of the CPU time to run cleanups more frequently, 
+- thread blocking, pinning and the tasks that take too long, accompanied by a steady flow of new requests will result in CPU throttling, 
 
-**hint6:** if you find the perfect minimal configuration that make your load scenario(s) pass, consider adding 1 or 2 replicas more just for backup as K8s does not guarantee that it won't kill your pods from time to time while freeing up some resources or after adding new nodes to the cluster.
+> As you can see, load testing can not only ensure you, that your application can handle the required load, but it can also help you with finding bottlenecks in the code and configuration. It can assist you with optimising JVM and finding proper resource assignments and replica count for your Kubernetes deployment.  It may also test the performance of your downstream and upstream services.
 
-## Get to know your cluster well
+# Elimination of external services from the initial phase of testing:
 
-1. Unless you are a DevOPs, SRE or any other Kubernates specialist that has been around while the cluster has been set up, you probably do not have a clue how it has been configured. In bigger organisations it may be quite hard to find that out too.
+In the initial load-testing phase, you should focus only on testing the **performance of your code**. Introducing external systems’ latencies, deployment quirks, performance issues, and possibly optimization problems will cloud your view and distract you from spotting issues within your codebase.
 
-If you have a good monitoring you can probably learn a few things about the cluster, for example, how much nodes are currently up or how many resources it uses, but you will probably not know what are the scaling strategies, what is the resource cap on the whole cluster etc.
+Introduce mocks for external services and configure your application to use them instead of the real services. Remember to introduce artificial latencies for the responses. Set their values to be similar to the average response time of the mocked service.  To make the mocks behave even more realistically, make the latencies vary a little for each call - they could take a value from a range of:
 
-2. When making crucial deployment decisions such as:
-- resource allocation per pod,
-- initial replicas count,
-- or HPA scaling strategy
+> <avg-randomX, avg+randomX>  milliseconds.
 
-experiment a bit. Test it out on the scenario that is valid for your case and do not settle for the first good result.
+Find the initial, reasonable static configuration for your deployment. Favor bigger JVMs with fewer replicas at the beginning - more requests flowing through a single deployment makes it easier to spot potential problems with your codebase.
 
-3. Some clusters behave better if you use many small replicas, some will favour a few bigger ones. I am not expert on K8s configuration, but my tests show that if your HPA triggers a cluster rescaling while you load test the application you will get bed results.
+# Importance of introducing integrations with external services one by one:
 
-## OOMKiller does not always work perfectly
+After your application has passed a previous phase with flying colors and you have found your initial deployment configuration that handles the load generated by the test scenario, it is time to replace mocks with real services.
 
-It might be a configuration thing, but I have seen a lot of pods that were trying to use well over their memory assignment value and lived long enough to disrupt the whole deployment's performence.
+Introduce external integrations one by one, rerunning the load tests each time, making sure the test is still passing. If any problems occur, resolve them immediately in cooperation with the owners of the service in question. Rerun the test after each change.
 
-## CPU throttling is a silent killer
+At this point, you may feel like finding bottlenecks in someone’s services and forcing them to work on providing a robust solution is a rude thing to do, but you are mistaken!  Finding such problems at the early stage, especially before going live with an important service, gives the team time to prepare a fix without haste, helps them build up knowledge and trust in their service, and saves all parties from busy on-calls in the future.
 
-When your application starts to overuse assign CPU time you will face throttling. Throttling is much harder to pinpoint than memory problems, because the application may live long enough to produce errors that will cover the real issue.
+# Deploying on Kubernetes - optimizing resource assignments and replicas count:
 
-Some important observations while load testing a CPU intensive JVM application:
-- your CPU usage will be much higher on the fresh pods due to the JVM warmup, you have take this into consideration or you will quickly face pod kills and restarts from the cluster,
-- throttling does not make the service blow up at once. The service will usually work for some time, degrading gradually while stedy flow of requests will make CPU switch context frequently having very little time to spend for each operation. In effect the response times will grow higher to the point your service starts to hit timeout somewhere,
-- after some time your k8s probes start to timeout too, so the cluster will begin to restart your pods. Traffic that was flowing through killed pods a second ago will hit remaining pods making them throttle even quicker,
-- if you are using any reverse proxy sidecars like Istio its CPU and memory usage can go off charts too. Another thing that can distract you from the real problem.
+This is an important step that is often neglected or even skipped in many projects. Organizations of all shapes and sizes tend to over-provision their deployments with values that have nothing to do with their actual needs.
+
+Over-provisioning might not always be a bad thing to do, but only if you know why you are doing it. In most cases, it is just a way of covering performance problems or design flaws with money.
+
+Putting a strain on your code, observing how it behaves, and understanding what you see is crucial for proper optimization and introducing further improvements. 
+perform load testing on various deployment configurations, observe how the application behaves after the changes, 
+you can begin this phase using mocks of the external services from the previous section, but you don’t necessarily have to, 
+start with a reasonable setup you discovered in previous sections and use it as a base for further experimentation, 
+(hard) organize your testing - do not change many things at once, focus on a single configuration value, rerun the load tests every time, observe the monitoring and take notes, 
+it might take a long time to find an optimal setup, as it is not an easy thing to do. When you feel that you have already optimized a lot and the test is still passing, deploy it and observe how it behaves in production.
+
+# Further optimizations - introducing HPA to the deployment:
+
+Our test case was special because the traffic we had to deal with was expected to appear in spikes. Spikes that we have prepared for were rare, but demanding. We wanted to prepare our service for spikes rising to hundreds of requests per second.
+
+We already had a well-balanced, working, static deployment with optimized resources and replicas count. Nevertheless, most of the time the applications were running idle, so there was still room for further optimizations.
+
+# Introducing Horizontal Pod Autoscaler (HPA) can go wrong and here’s why:
+
+As simple as it may look, reducing the replica count by some value and configuring HPA to bring that number back will not always work as expected.
+
+I am not a Kubernetes expert and most of the following points are based on my observations and assumptions, but some of them have proven to have merit, so I would like to share them with you:
+
+- using a static deployment for your application makes your cluster reserve resources on available nodes upfront. When HPA starts to scale out pods, the cluster allocates a significant amount of resources on available nodes. It may happen that existing nodes are not enough and the whole cluster will have to scale out too.  As a result, the load test will not pass as it usually has a huge negative effect on the performance of the service,
+
+- fresh JVMs (in most versions) will use much more CPU cycles until they warm up, so if you have optimized your CPU assignments very well, you might start to experience CPU throttling given that additional, temporary usage.
+
+  Combining this unaccounted-for CPU usage with a constant flow of incoming requests, the performance will decrease with time, until your app will finally start to time out on healthiness/readiness probes and the pod will be killed.
+
+  There will be, of course, a new pod spawned in its place, but it will probably share the same fate.  Increasing CPU assignment in your deployment configuration may help you mitigate this issue. It will also leave you with over-provisioned CPU just after JVM warms up, as additional cycles will not be used most of the time. 
+
+
+- configuring CPU assignments for your deployment should not use limit, as the whole requests/limit concept works differently then it does for memory assignments.  
+
+What is not a piece of common knowledge is that CPU request configuration guarantees that your pod will be assigned the requested CPU cycles (as long as there are physical CPU resources available on the cluster). Therefore not using a limit configuration does not save the others from being robbed from their CPU cycles by your greedy deployment.  When you do not limit CPU assignment for your pods, they will be allowed to use more cycles than they have requested, but only if there are some idle CPU cycles available on the node.  
+
+> It makes a huge difference, because it does not only solve JVM warmup problem described in the previous section, but also lets the initial replicas keep up with the incoming requests until HPA spawns more instances.
+
+**  Here is a link to the article that I found helpful:**  https://home.robusta.dev/blog/stop-using-cpu-limits
+**  Here is a link to the design proposal that has described resource guarantees:**  https://github.com/kubernetes/design-proposals-archive/blob/8da1442ea29adccea40693357d04727127e045ed/node/resource-qos.md#compressible-resource-guarantees
+ 
+- scale out quickly, scale down slowly. When your application works on spikes too, you should be prepared for the traffic, as soon as you notice the first signs of it.  In the worst-case scenario, you will have too many replicas for a few minutes until the cluster cleans them up, but in most cases, you will be ready to handle the traffic before it gets really heavy.
+
+
+# Final words:
+
+- Special tasks require special tools. Design a solid test scenario. Aim for simplicity both in code and way of running the test. You should be able to run the test anytime you want with just a few commands.  - Remember to run the test within the cluster! Especially when hosting your Kubernetes cluster on the cloud. Cloud providers like AWS can charge additionally for the incoming traffic from external sources. 
+- Do not neglect the value of performance testing. It can be an invaluable tool for finding performance bottlenecks, deployment misconfigurations and building trust in the developed solution, 
+- Do not over-provision resources and replicas to cover your problems with money. When you suspect that your application is leaking memory or uses CPUs inefficiently, use your load tests, try to understand why it happens, and seek a solution.
