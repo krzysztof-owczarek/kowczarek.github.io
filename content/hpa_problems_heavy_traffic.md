@@ -112,7 +112,7 @@ What is not a piece of common knowledge, CPU request configuration **guarantees*
 
 # Final words:
 
-- Special tasks require special tools. Design a solid test scenario. Aim for simplicity both in code and way of running the test. **You should be able to run the test anytime you want with just a few commands**
+- Special tasks require special tools. Design a solid test scenario. Aim for simplicity both in code and way of running the test. **You should be able to run the test anytime you want in just a few seconds!**
 
 > Remember to run the test within the cluster! Especially when hosting your Kubernetes cluster on the cloud. Cloud providers like AWS can charge additionally for the incoming traffic from external sources,
 
