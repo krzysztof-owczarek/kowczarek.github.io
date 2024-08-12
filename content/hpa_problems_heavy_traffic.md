@@ -1,6 +1,8 @@
 # Performing load tests on the spike-oriented, CPU-intensive JVM application and find the right setup for Kubernetes deployment.
 
-Some time ago, I have been working on performing thorough load tests on the new backend application developed to provide a totally new service for our clients. The task was important because the application had to perform well under heavy traffic and the traffic was expected to arrive mostly in the form of sudden and heavy spikes. The test was supposed to uncover potential problems, help with the final optimization and configurations, and most importantly prove that we could meet all our goals. 
+Some time ago, I have been working on designing and performing load tests of a new backend application developed to provide a totally new service for our clients.
+
+The task was important because the application had to perform well under heavy traffic and the traffic was expected to arrive mostly in the form of sudden and heavy spikes. The test was supposed to uncover potential problems in code, help with the final optimizations, and most importantly prove that it could meet all performance goals. 
 
 > Load tests are an important step in finding the flaws in the code, as well as in efficiently balancing resource assignments (memory and CPU), finding a proper JVM configuration (Garbage Collector, Xms/Xmx) and replica count (starting without HPA) to achieve the maximum performance needed with as few resources possible.
 
