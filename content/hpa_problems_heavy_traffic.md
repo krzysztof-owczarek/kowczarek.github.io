@@ -104,7 +104,8 @@ What is not a piece of common knowledge, CPU request configuration **guarantees*
 > It makes a huge difference, because it does not only solve JVM warmup problem described in the previous section, but also lets the initial replicas keep up with the incoming requests until HPA spawns more instances.
 
 **  Here is a link to the article that I found helpful:**  https://home.robusta.dev/blog/stop-using-cpu-limits
-**  Here is a link to the design proposal that has described resource guarantees:**  https://github.com/kubernetes/design-proposals-archive/blob/8da1442ea29adccea40693357d04727127e045ed/node/resource-qos.md#compressible-resource-guarantees
+
+**  Here is a link to the K8s design proposal that has described resource guarantees:**  https://github.com/kubernetes/design-proposals-archive/blob/8da1442ea29adccea40693357d04727127e045ed/node/resource-qos.md#compressible-resource-guarantees
  
 - **scale out quickly, scale down slowly**. When your application works on spikes too, you should be prepared for the traffic, as soon as you notice the first signs of it.  In the worst-case scenario, you will have too many replicas for a few minutes until the cluster cleans them up, but in most cases, you will be ready to handle the traffic before it gets really heavy.
 
