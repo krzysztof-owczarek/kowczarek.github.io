@@ -6,9 +6,9 @@ Some time ago, I have been working on performing thorough load tests on the new 
 
 Here are some thoughts, observations, and lessons learned that may help you find your own path into proper load testing.
 
-# Challenges of synchronous calls and context switching:
+# Why bother load testing? Find your reasons, there are many!
 
-Application in test was an orchestrator.
+... for example, the application in test was an orchestrator.
 
 The majority of the calls the application orchestrated were synchronous. It effectively means that each call was being fed with data from the previous calls and it had major consequences:
 
