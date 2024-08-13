@@ -1,24 +1,22 @@
-# Performing load tests on the spike-oriented, CPU-intensive JVM application and find the right setup for Kubernetes deployment.
+# Lessons learned: Performing load tests on the spike-oriented, CPU-intensive JVM application
 
-Some time ago, I have been working on designing and performing load tests of a backend service providing a new service for our clients.
+Some time ago, I have been working on designing and performing load tests of a backend application providing a completely new service for our clients.
 
-The task was important because the application had to perform well under heavy traffic, which was expected to arrive mostly in the form of sudden, heavy spikes. The test was supposed to uncover potential problems in code, help with the final optimizations, and most importantly prove that it could meet all performance goals. 
+The application had to **perform perfectly** under heavy traffic, which was expected to arrive mostly in the form of **sudden, heavy spikes**. Load testing was supposed to uncover potential problems in code, help with the optimization process, and most importantly prove that the service was able to meet all of the performance goals. 
 
-It was a very successful endevour. It helped with discovering performance bottlenecks, cutting costs on Kubernetes deployments and most importantly of all - it played a major role in building trust in our code.
+It was a very successful endevour. It helped us discover performance bottlenecks, lead to major costs cuts on Kubernetes and most importantly of all - it played a major role in building trust in our code.
 
-Thorough, repetitive testing let you embrace change easily without fear, providing a fast feedback whenever you need it.
+Thorough, repetitive testing let you embrace change easily without any fear, providing **a fast feedback loop** anytime you need it.
 
-> Load tests are an important step in finding the flaws in the code, as well as in efficiently balancing resource assignments (memory and CPU), finding a proper JVM configuration (Garbage Collector, Xms/Xmx) and replica count (starting without HPA) to achieve the maximum performance needed with as few resources possible.
+> Load tests are an important step in finding flaws in the code, as well as in efficiently balancing resource assignments (memory and CPU), finding a proper JVM configuration (Garbage Collector, Xms/Xmx) and replica count (with and without HPA) to achieve the maximum performance needed with as few resources possible.
 
 Here are some thoughts, observations, and lessons learned that may help you find your own path into proper load testing.
 
-# Why bother load testing? Find your reasons, there are many!
+## Why bother load testing? Pick your own reasons, there are many!
 
-... for example, the application in test was an orchestrator.
+Our application in test was an orchestrator of many integration calls. The majority of the calls were synchronous, which effectively meant that each call was being fed with data from the previous calls and it had major consequences:
 
-The majority of the calls the application orchestrated were synchronous. It effectively means that each call was being fed with data from the previous calls and it had major consequences:
-
-- the application response time was a sum of all intermediate response times plus a latency added by an orchestrator itself, 
+- the application response time was a sum of all intermediate roundtrips time plus a latency added by an orchestrator itself, 
 
 - every call to the external services took some time, which could not be spent waiting - CPU had to switch their focus toward other threads that are ready for action, 
 
@@ -30,7 +28,7 @@ The majority of the calls the application orchestrated were synchronous. It effe
 
 > Load testing will not only ensure you, that your application can handle the required load, but it can also help you with finding bottlenecks in both code and configuration. It can assist you with optimising JVM, finding proper resource assignments and replica count for your Kubernetes deployment.   It may also test the performance of your downstream and upstream services.
 
-# Elimination of external services from the initial phase of testing:
+## Eliminate external services in the initial phase of testing
 
 In the initial load-testing phase, you should focus only on testing the **performance of your code**. Introducing external systems’ latencies, deployment quirks, performance issues, and possibly optimization problems will cloud your view and distract you from spotting issues within your codebase.
 
@@ -42,7 +40,7 @@ To make the mocks behave even more realistically, make the latencies vary a litt
 
 Find the initial, reasonable static configuration for your deployment. Favor bigger JVMs with fewer replicas at the beginning - more requests flowing through a single deployment makes it easier to spot potential problems with your codebase.
 
-# Importance of introducing integrations with external services one by one:
+## Introduce integrations with external services one by one
 
 After your application has passed a previous phase with flying colors and you have found your initial deployment configuration that handles the load generated by the test scenario, it is time to replace mocks with real services.
 
@@ -55,7 +53,7 @@ After your application has passed a previous phase with flying colors and you ha
 
 Finding such problems at the early stage, especially before going live with an important service, gives the team time to prepare a fix without haste, helps them build up knowledge and trust in their service, and saves all parties from busy on-calls in the future.
 
-# Deploying on Kubernetes - optimizing resource assignments and replicas count:
+## Optimizing resource assignments and replicas count for K8s deployment
 
 This is an important step that is often neglected or even skipped in many projects. **Organizations of all shapes and sizes tend to over-provision their deployments with values that have nothing to do with their actual needs.**
 
@@ -73,13 +71,13 @@ Putting a strain on your code, observing how it behaves, and understanding what 
 
 It might take a long time to find an optimal setup, as it is not an easy thing to do. When you feel that you have already optimized a lot and the test is still passing, deploy it and observe how it behaves in production.
 
-# Further optimizations - introducing HPA to the deployment:
+## Further optimizations - configuring Horizontal Pod Autoscaler (HPA) for the deployment
 
 Our test case was special because the traffic we had to deal with was expected to appear in spikes. Spikes that we have prepared for were rare, but demanding. We wanted to prepare our service for spikes rising to hundreds of requests per second.
 
 We already had a well-balanced, working, static deployment with optimized resources and replicas count. Nevertheless, most of the time the applications were running idle, so there was still room for further optimizations.
 
-# Introducing Horizontal Pod Autoscaler (HPA) can go wrong and here’s why:
+## Introducing Horizontal Pod Autoscaler (HPA) can go wrong and here’s why
 
 As simple as it may look, reducing the replica count by some value and configuring HPA to bring that number back will not always work as expected.
 
@@ -97,7 +95,7 @@ As a result, the load test **will not pass** as it usually has a huge negative e
 
   Increasing CPU assignment in your deployment configuration may help you mitigate this issue. It will also leave you with over-provisioned CPU just after JVM warms up, as additional cycles will not be used most of the time. 
 
-# Do not limit CPU assignments:
+## Do not limit CPU assignments!
 
 Configuring CPU assignments for your deployment should not use **limit**, as the **requests/limit** concept works differently then it does for memory assignments.  
 
@@ -107,14 +105,16 @@ What is not a piece of common knowledge, CPU request configuration **guarantees*
 
 > It makes a huge difference, because it does not only solve JVM warmup problem described in the previous section, but also lets the initial replicas keep up with the incoming requests until HPA spawns more instances.
 
-**  Here is a link to the article that I found helpful:**  https://home.robusta.dev/blog/stop-using-cpu-limits
+> **  Here is a link to the article that I found very helpful:**  https://home.robusta.dev/blog/stop-using-cpu-limits
 
-**  Here is a link to the K8s design proposal that has described resource guarantees:**  https://github.com/kubernetes/design-proposals-archive/blob/8da1442ea29adccea40693357d04727127e045ed/node/resource-qos.md#compressible-resource-guarantees
+> **  Here is a link to the K8s design proposal that has described resource guarantees:**  https://github.com/kubernetes/design-proposals-archive/blob/8da1442ea29adccea40693357d04727127e045ed/node/resource-qos.md#compressible-resource-guarantees
  
-- **scale out quickly, scale down slowly**. When your application works on spikes too, you should be prepared for the traffic, as soon as you notice the first signs of it.  In the worst-case scenario, you will have too many replicas for a few minutes until the cluster cleans them up, but in most cases, you will be ready to handle the traffic before it gets really heavy.
+## Scale out quickly, but scale down slowly
+
+When your application works with an intensive incoming traffic, you should be prepared, as soon as you notice the first signs of it.   In the worst-case scenario, you will have too many replicas for a few minutes until the cluster cleans them up, but in most cases, you will be ready to handle the traffic before it gets really heavy.
 
 
-# Final words:
+## Final notes
 
 - Special tasks require special tools. Design a solid test scenario. Aim for simplicity both in code and way of running the test. **You should be able to run the test anytime you want in just a few seconds!**
 
