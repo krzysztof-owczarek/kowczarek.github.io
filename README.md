@@ -9,4 +9,4 @@
 ### 3. [Alias-like functionality in subshells / external subshells (ex. Docker, K8s, etc.)](./content/kind_of_aliases_in_subshell.md)
 
 ## Load tests
-### 4. [Lessons learned: load testing a CPU intensive application. Performance optimizations, finding proper resource assignments and configuring HPA](./content/hpa_problems_heavy_traffic.md)
+### 4. [Lessons learned: Performing load tests on the spike-oriented, CPU-intensive JVM application](./content/hpa_problems_heavy_traffic.md)
