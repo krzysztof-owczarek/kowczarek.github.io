@@ -105,9 +105,9 @@ What is not a piece of common knowledge, CPU request configuration **guarantees*
 
 > It makes a huge difference because it not only solves the JVM warmup problem described in the previous section but also lets the initial replicas keep up with the incoming requests until HPA spawns more instances.
 
-> **  Here is a link to the article that I found very informative:**  https://home.robusta.dev/blog/stop-using-cpu-limits
+**  Here is a link to the article that I found very informative:**  https://home.robusta.dev/blog/stop-using-cpu-limits
 
-> **  Here is a link to the K8s design proposal that has described resource guarantees:**  https://github.com/kubernetes/design-proposals-archive/blob/8da1442ea29adccea40693357d04727127e045ed/node/resource-qos.md#compressible-resource-guarantees
+**  Here is a link to the K8s design proposal that has described resource guarantees:**  https://github.com/kubernetes/design-proposals-archive/blob/8da1442ea29adccea40693357d04727127e045ed/node/resource-qos.md#compressible-resource-guarantees
  
 ## Scale out quickly, but scale down slowly
 
@@ -118,7 +118,7 @@ When your application works with an intensive incoming traffic, you should be pr
 
 - Special tasks require special tools. Design a solid test scenario. Aim for simplicity in code and in a way of running the test. **You should be able to run the test anytime in just a few seconds!**
 
-> Remember to run the test within the cluster! Especially when hosting your Kubernetes cluster on the cloud. Cloud providers like AWS can charge additionally for the incoming traffic from external sources,
+> Remember to run the test within the cluster! Especially when hosting your Kubernetes cluster on the cloud. **Cloud providers like AWS can charge additionally for the incoming traffic from external sources**
 
 - Do not neglect the value of performance testing. It can be an invaluable tool for finding performance bottlenecks, deployment misconfigurations, and building trust in the developed solution, 
 
