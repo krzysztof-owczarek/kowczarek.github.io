@@ -91,9 +91,9 @@ As a result, the load test **will not pass** as it usually has a huge negative e
 
 - fresh JVMs (in most versions) **will use much more CPU cycles until they warm up**, so if you have optimized your CPU assignments very well, you might experience CPU throttling given that additional, temporary usage.
 
-  Combining this unaccounted-for CPU usage with a constant flow of incoming requests, the performance will decrease with time, until your app will finally start to time out on healthiness/readiness probes and the pod will be killed. There will be, of course, a new pod spawned in its place, but it will quickly share the same fate.
+Combining this unaccounted-for CPU usage with a constant flow of incoming requests, the performance will decrease with time, until your app will finally start to time out on healthiness/readiness probes and the pod will be killed. There will be, of course, a new pod spawned in its place, but it will quickly share the same fate.
 
-  Increasing CPU assignment in your deployment configuration may help you mitigate this issue. It will also leave you with an over-provisioned CPU just after JVM warms up, as additional cycles will not be used most of the time. 
+Increasing CPU assignment in your deployment configuration may help you mitigate this issue. It will also leave you with an over-provisioned CPU just after JVM warms up, as additional cycles will not be used most of the time. 
 
 ## Do not limit CPU assignments!
 
@@ -113,6 +113,13 @@ What is not a piece of common knowledge, CPU request configuration **guarantees*
 
 When your application works with an intensive incoming traffic, you should be prepared, as soon as you notice the first signs of it.   In the worst-case scenario, you will have too many replicas for a few minutes until the cluster cleans them up, but in most cases, you will be ready to handle the traffic before it gets heavy.
 
+## Find the right Garbage Collector for your use case
+
+There are several GCs available that you may use with your JVM. Each one of them has its own requirements and work characteristics. **Choosing the right GC may have a significant impact on your CPU and memory usage. It may also affect the performance of your service depending on its memory cleanup strategies.**
+
+Many sources on the internet will help you choose GC candidates that may work for you, so I will skip describing them here. Your options vary depending on GC requirements for available CPUs and heap size (ex. parallel GCs require 2+ CPU, some work best with small heaps, some are suited for bigger heap sizes, etc.).
+
+Test them using your load test scenarios to see which one will best fit for achieving the best possible performance, using as few resources as possible.
 
 ## Final notes
 
