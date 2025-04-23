@@ -8,3 +8,6 @@
 
 ## Load tests
 ### 4. [Lessons learned: Performing load tests on the spike-oriented, CPU-intensive JVM application](https://krzysztof-owczarek.github.io/kowczarek.github.io/content/lessons_learned_load_tests.html)
+
+## Spring @Transactional-like mechanism for DynamoDB
+### 5. [Chapter One - Implementing an annotation-based @Transactional-like mechanism for DynamoDB transactions](https://krzysztof-owczarek.github.io/kowczarek.github.io/content/dynamodb_transactional_chapter_one_theory.html)
