@@ -18,12 +18,12 @@ It might have looked more or less like this:
 >> CLOSE the connection.
 ```
 
-## Does the Spring Transactional mechanism also send out BEGIN and COMMIT when you use the <b>@Transactional</b> annotation?
+### Does the Spring Transactional mechanism also send out BEGIN and COMMIT when you use the <b>@Transactional</b> annotation?
 <b>No… and somehow yes</b>, it depends on the implementation. It does not directly call BEGIN, COMMIT, or ROLLBACK. It uses APIs like JDBC and its methods instead, which ultimately translate to database-specific statements depending on the database driver used.
 All transaction-related calls in Spring Framework go through the selected implementation of the <a href="https://github.com/spring-projects/spring-framework/blob/main/spring-tx/src/main/java/org/springframework/transaction/PlatformTransactionManager.java">(Platform)TransactionManager</a> interface, which, in a simplification, will execute the JDBC (JPA, Hibernate, etc.) equivalent of BEGIN, COMMIT, or ROLLBACK, among other things like setting isolation level, transaction propagation mode, etc.
 For more information on how Spring Transaction Management works, I recommend reading <a href="https://www.marcobehler.com/guides/spring-transaction-management-transactional-in-depth">„Spring Transaction Management: @Transactional In-Depth” by Marco Behler.</a>
 
-## Does Spring’s transaction manager keep the database connection open?
+### Does Spring’s transaction manager keep the database connection open?
 <b>Yes.</b> The transaction manager obtains the database connection from the connection pool and uses this connection to interact with a database.
 The connection in Spring is usually obtained through a DataSource object provided to the transaction manager, which isconfigured (often automatically) for your database of choice.
 
@@ -41,7 +41,7 @@ The declarative transaction mechanism wired by the <b>@Transactional</b> annotat
 
 > Notes about DynamoDB: I will show you how to implement most of those points using a mechanism similar to the one known from Spring. I will focus on recreating a <b>@Transactional</b>-like annotation and AOP interceptor, and follow up with example implementations of most of the propagation mechanisms and read-only transactional calls to DynamoDB using the API provided by the AWS SDK.
 
-## How is the <b>@Transactional</b> annotation-based mechanism implemented?
+### How is the <b>@Transactional</b> annotation-based mechanism implemented?
 The solution is based on the AOP (Aspect Oriented Programming) proxies. Methods or classes that match a defined pointcut (in that case, methods or classes annotated with the <b>@Transactional</b> annotation) are being picked up and intercepted, allowing programmers to define additional actions that may happen before, after, or around the invoked method.
 
 ## We had some theory, now it is time for some code…
