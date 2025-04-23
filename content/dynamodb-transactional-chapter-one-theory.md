@@ -29,7 +29,7 @@ The connection in Spring is usually obtained through a DataSource object provide
 
 > Notes about DynamoDB: communication with DynamoDB using AWS SDK for Java is designed as external API calls, so there will be no open, direct connection to the database. There will also be no BEGIN, COMMIT, or ROLLBACK commands known from the examples above. Write and read transactions were designed as API calls that accept arguments as a request body. The request body defines the scope of the transaction. There is also no ROLLBACK as the transaction request either succeeds or fails. ACID guarantees are kept on the AWS infrastructure side under a set of conditions listed here.
 
-## Main functionalities of the declarative transaction mechanism in the Spring Framework
+### Main functionalities of the declarative transaction mechanism in the Spring Framework
 Adding the <b>@Transactional</b> annotation on the class or method level ensures that all database operations executed will be part of a thread-bound transaction.
 The declarative transaction mechanism wired by the <b>@Transactional</b> annotation has many advantages and functionalities beyond being a „simple” transaction wrapper.
 1. eliminates the need for programmatic transaction handling,
