@@ -11,3 +11,5 @@
 
 ## Spring @Transactional-like mechanism for DynamoDB
 ### 5. [Chapter One - Implementing an annotation-based @Transactional-like mechanism for DynamoDB transactions](https://krzysztof-owczarek.github.io/kowczarek.github.io/content/dynamodb_transactional_chapter_one_theory.html)
+### 6. [Chapter Two - Implementing an annotation-based @Transactional-like mechanism for DynamoDB transactions](https://krzysztof-owczarek.github.io/kowczarek.github.io/content/dynamodb_transactional_chapter_two.html)
+
